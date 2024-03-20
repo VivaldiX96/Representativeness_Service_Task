@@ -24,7 +24,11 @@
 		// configure properties specific to VS Code.
 		"vscode": {
 			"settings": {},
-			"extensions": ["ms-azuretools.vscode-docker", "esbenp.prettier-vscode"]
+			"extensions": [
+				"ms-azuretools.vscode-docker",
+				"esbenp.prettier-vscode",
+				"ms-python.vscode-pylance@2023.12.1"
+			]
 		}
 	}
 

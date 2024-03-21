@@ -1,11 +1,5 @@
 
-
-
-
-
-
-
-
+import math
 import random
 from typing import List
 import numpy as np
@@ -23,12 +17,14 @@ NUMBER_OF_MODELS: int = 4    # "L" from task description - Default number of par
                              # from which the averaged prediction will be obtained.
                              # It is _not_ directly editable by the User
 
-SIZE = 5  # Default size of one array of numbers that will become a single row 
+SIZE: int = 5  # Default size of one array of numbers that will become a single row 
           # of independent variables in the training data; not editable by the User
 
-ARRAYS_AMOUNT = 1000  # Total number of arrays of numbers (each of the size = SIZE) 
+ARRAYS_AMOUNT: int = 1000  # Total number of arrays of numbers (each of the size = SIZE) 
                      # on which the model will be initially trained
 
+K_NEAREST_NEIGHBOURS: int = 10 # the number of the nearest neighbours of each analyzed object - 
+                          # this number will influence the representativeness analysis
 
 
 
@@ -82,13 +78,21 @@ async def repr_calc_in_a_set(objects: list):
         obj = objects[position]
         distances_sum = 0
         neighbours = [element for element in objects if element != objects[position]]
+        neighbours_with_distances = []
+        #Calculating the distances to all neighbours to find the K nearest neighbours
         for neighbour in neighbours:
-            distance = sum((a - b)**2 for a, b in zip(obj, neighbour))
-            distances_sum += distance
+            distance = math.sqrt(sum((a - b)**2 for a, b in zip(obj, neighbour)))
+            # adding up all the distances from the current considered object ot the rest of the neighbors
+            neighbours_with_distances.append([neighbour, distance])
+            
             print(f"distance = {distance}")
-        avg_distance = distances_sum / SublistSize
+        
+        nearest_neighbours = sorted(neighbours_with_distances, key=lambda x: x[1], reverse=True)[:K_NEAREST_NEIGHBOURS]
+        # adding up all 10 nearest neighbours' distances for the object
+        distances_sum = sum(pair[1] for pair in nearest_neighbours) 
+        avg_distance = distances_sum / K_NEAREST_NEIGHBOURS
         representativeness = 1 / (1 + avg_distance)
-        ReprDict.append([obj, representativeness])
+        ReprDict.append([obj, representativeness]) #appending mutable elements in order to enable feature scaling later
 
 
 

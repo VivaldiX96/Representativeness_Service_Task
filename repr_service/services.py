@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 import math
 import random
 from typing import List
@@ -85,10 +86,11 @@ async def repr_calc_in_a_set(objects: list):
             # print(f"distance = {distance}")  # printing for visual checking of example results
         
         nearest_neighbours = sorted(neighbours_with_distances, key=lambda x: x[1], reverse=True)[:K_NEAREST_NEIGHBOURS]
-        # adding up all 10 nearest neighbours' distances for the object
-        distances_sum = sum(pair[1] for pair in nearest_neighbours) 
+        # adding up all K nearest neighbours' distances for the object, taking the average and calculating representativeness based on it
+        distances_sum = sum(obj_and_dist[1] for obj_and_dist in nearest_neighbours) 
         avg_distance = distances_sum / K_NEAREST_NEIGHBOURS
         representativeness = 1 / (1 + avg_distance)
+        # appending the representativeness value to a list of objects mapped to their repr. values
         ReprDict.append([obj, representativeness]) #appending mutable elements in order to enable feature scaling later
 
 
@@ -138,3 +140,74 @@ async def train_model():  #Uses the libraries: numpy, matplotlib, pandas
     from sklearn.metrics import r2_score
     r2_score(y_test, y_pred)
     
+
+
+
+
+
+
+
+def get_training_status():
+  """
+  Returns a dictionary of informations on the status of the ML process.
+
+  Returned values:
+    status: "Error", "model training still in progress", "model training completed"
+    error_message: an optional message about the error if it occured
+    start_time, end_time: time when the model training started and when it ended
+  """
+
+  status = "model training still in progress"
+  error_message = None
+  start_time = _start_time
+
+  if _training_failed:
+    status = "Error"
+    error_message = _error_message
+
+  if _training_completed:
+    status = "model training completed"
+    end_time = _end_time
+
+  return {
+    "status": status,
+    "error_message": error_message,
+    "start_time": start_time.isoformat(),
+    "end_time": end_time.isoformat() if end_time else None,
+  }
+
+# Zmienne do śledzenia statusu
+_training_failed = False
+_error_message = None
+_start_time = None
+_training_completed = False
+_end_time = None
+
+# Function that initiates the training of the model.
+def start_training():
+  # setting the global variables for status observation
+  global _training_failed, _error_message, _start_time, _training_completed, _end_time
+
+  _training_failed = False
+  _error_message = None
+  _start_time = datetime.now()
+  _training_completed = False
+  _end_time = None
+# Function to be called when the model trianing ends - it updates the status variables
+def end_training(success=True):
+  """
+  Argumenty:
+    success: True, if the training finished successfully , otherwise False. ### ! prepare the 'success' variable: it should check 
+                                                                            ### if the full set of dependent variables is delivered
+                                                                            ### at the end of the model training.
+  """
+
+  global _training_failed, _error_message, _training_completed, _end_time
+
+  _training_completed = True 
+  _end_time = datetime.now()
+
+  if not success:
+    _training_failed = True
+    _error_message = "An error occurred during the model training."
+

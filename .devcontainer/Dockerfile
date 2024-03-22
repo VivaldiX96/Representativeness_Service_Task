@@ -8,7 +8,7 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Exposing the port on which the application will listen
-EXPOSE 8090
+EXPOSE 8000
 
 # Installing the required libraries
 RUN pip install --no-cache-dir -r requirements.txt
@@ -17,4 +17,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Running the application using CMD
-CMD [ "python", "./app.py" ]
+CMD [ "uvicorn",  "repr_service.main:app", "--reload" ]

@@ -6,9 +6,17 @@ This program generates a REST service that allows:
 
 Pylance version must be 2023.12.1 or lower (that's why it's specified in the VSCode extensions section in devcontainer.json) - otherwise errors will occur when trying to initialize an int type variable within a certain values interval
 
-**Instruction on how to run the devcontainer in VSCode:**
+**Instruction on how to run the program from a Docker:**
 
-- In order to run this program in a devcontainer with the required dependencies installed, you need to have Docker running on your machine (you can choose a version for your machine and download it from https://docs.docker.com/desktop/). It cooperates with VSCode by providing a container inside which you will run the program.
+- to make sure you are in /workspaces/Representativeness_Service_Task/repr_service - run "cd repr_service" in the command line inside the container
+
+- run the server with the command "uvicorn main:app --reload"
+
+- to see the endpoints, open the browser on the address "localhost:8000/docs". Make sure that port 8000 is unoccupied before that, otherwise contact with the app may be obstructed.
+
+_Optional - Instruction on how to run the devcontainer in VSCode:_
+
+- In order to run this program in a devcontainer with the required dependencies installed, you need to have Docker running on your machine (you can choose a version for your machine and download it from https://docs.docker.com/desktop/). It cooperates with VSCode (https://code.visualstudio.com/Download) by providing a container inside which you will run the program.
 - Install the Dev Containers extension if it is not installed yet in VSCode on your machine (identifier: ms-vscode-remote.remote-containers).
 - Open VSCode in the directory where this repo is located
 - Press Ctrl + Shift + P to show and run commands in the search field on top of the VSCode window

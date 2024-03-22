@@ -12,11 +12,6 @@ async def root():
 
 
 
-
-
-
-
-
 # endpoint for initiation of the model training
 
 #app. ...

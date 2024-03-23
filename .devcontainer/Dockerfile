@@ -2,19 +2,16 @@
 FROM mcr.microsoft.com/devcontainers/python:1-3.12-bullseye
 
 # Setting the working directory in the container
-WORKDIR /app
+WORKDIR /code
 
 # Copying the requirements file into the container at /app
-COPY requirements.txt .
-
-# Exposing the port on which the application will listen
-EXPOSE 8000
+COPY ./requirements.txt /code/requirements.txt
 
 # Installing the required libraries
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r /code/requirements.txt
 
 # Adding the application files to the image
-COPY . .
+COPY ./app /code/app
 
-# Running the application using CMD
-CMD [ "uvicorn",  "repr_service.main:app", "--reload" ]
+# Running the server using CMD
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

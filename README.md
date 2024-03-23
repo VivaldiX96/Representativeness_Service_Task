@@ -8,17 +8,17 @@ Pylance version must be 2023.12.1 or lower (that's why it's specified in the VSC
 
 **Instruction on how to run the program from a Docker:**
 
-- to make sure you are in /workspaces/Representativeness_Service_Task/repr_service - run "cd repr_service" in the command line inside the container
+    - in order to build the image, open the command prompt, change directory to where the Dockerfile is stored and run "docker build -t repr-service .".
 
-- run the server with the command "uvicorn main:app --reload"
+    - to run the image in Docker, run "docker run -d --name repr-service-container -p 80:80 repr-service" in the command line. The server should start automatically from a command in the Dockerfile.
 
-- to see the endpoints, open the browser on the address "localhost:8000/docs". Make sure that port 8000 is unoccupied before that, otherwise contact with the app may be obstructed.
+    - to see the endpoints, open the browser on the address "localhost:80/docs". Make sure that port 80 is unoccupied before that, otherwise contact with the app may be obstructed.
 
 _Optional - Instruction on how to run the devcontainer in VSCode:_
 
-- In order to run this program in a devcontainer with the required dependencies installed, you need to have Docker running on your machine (you can choose a version for your machine and download it from https://docs.docker.com/desktop/). It cooperates with VSCode (https://code.visualstudio.com/Download) by providing a container inside which you will run the program.
-- Install the Dev Containers extension if it is not installed yet in VSCode on your machine (identifier: ms-vscode-remote.remote-containers).
-- Open VSCode in the directory where this repo is located
-- Press Ctrl + Shift + P to show and run commands in the search field on top of the VSCode window
-- Choose the option "Dev Containers: Reopen in Container". You can find it if you start typing ">reopen..." in the search field. Make sure that Docker is running by the time you choose this option.
-- To run the server, type "uvicorn main:app --reload" in the command line in the IDE when you are in the working directory in the program's container - make sure that the command prompt looks like this: "vscode ➜ /workspaces/Representativeness_Service_Task"
+    - In order to run this program in a devcontainer with the required dependencies installed, you need to have Docker running on your machine (you can choose a version for your machine and download it from https://docs.docker.com/desktop/). It cooperates with VSCode (https://code.visualstudio.com/Download) by providing a container inside which you will run the program.
+    - Install the Dev Containers extension if it is not installed yet in VSCode on your machine (identifier: ms-vscode-remote.remote-containers).
+    - Open VSCode in the directory where this repo is located
+    - Press Ctrl + Shift + P to show and run commands in the search field on top of the VSCode window
+    - Choose the option "Dev Containers: Reopen in Container". You can find it if you start typing ">reopen..." in the search field. Make sure that Docker is running by the time you choose this option.
+    - To run the server, first cd to ./devcontainer/app - then type "uvicorn main:app --host 0.0.0.0 --port 80 --reload" in the command line in the IDE when you are in the working directory in the program's container - the uvicorn service will not be launched automatically if you open the devcontainer, the command line has to be handled by the user

@@ -1,14 +1,48 @@
 import asyncio
 from datetime import datetime
 import math
+from pathlib import Path
 import random
 from typing import List
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 import pandas as pd
+import joblib
+from joblib import dump
+from sklearn import base
+from sklearn.ensemble import RandomForestRegressor
 import schemas
 from models import MachineLearningData
-from parameters import NUMBER_OF_MODELS, INDVARS_ARRAY_SIZE, ARRAYS_AMOUNT, K_NEAREST_NEIGHBOURS 
+
+
+
+from parameters import NUMBER_OF_MODELS, INDVARS_ARRAY_SIZE, ARRAYS_AMOUNT, K_NEAREST_NEIGHBOURS
+
+TRAINED_MODELS_PATH_NAME = 'trained_models' # name of a folder created (once) for all the trained models
+
+### DON'T UNCOMMENT - descriptions only for easier reference of meaning of each global variable
+
+# NUMBER_OF_MODELS: int      # "L" from task description - Default number of parts into which we split 
+                             # the whole group of training arrays; also the number of models
+                             # from which the averaged prediction will be obtained.
+                             # It is _not_ directly editable by the User
+
+# INDVARS_ARRAY_SIZE: int   # Default size of one array of numbers that will become a single row 
+                            # of independent variables in the training data; not editable by the User
+
+
+# ARRAYS_AMOUNT: int # Total number of arrays of numbers (each of the size = SIZE) 
+                     # on which the model will be initially trained
+
+# K_NEAREST_NEIGHBOURS: int # the number of the nearest neighbours of each analyzed object - 
+                            # this number will influence the representativeness analysis
+
+# REGRESSION_MODEL: RandomForestRegressor() #the type of regression machine learning model that will make the predictions
+
+### END OF DESCRIPTIONS
+
+
 
 #### We define the representativeness of an object as: 
 #### 1/(1 + average_distance_of_k_neighbors)
@@ -18,7 +52,7 @@ from parameters import NUMBER_OF_MODELS, INDVARS_ARRAY_SIZE, ARRAYS_AMOUNT, K_NE
 
 # Function generating a set of arrays of the chosen size 'size' with arrays_amount elements;
 # It returns a list of arrays of random numbers to be used as independent variables in ML training
-def generate_arrays(size: int, 
+def generate_arrays(array_size: int, 
                           #number of arrays must be above a number that provides 
                           #enough examples to train the model but is not excessively high
                           arrays_amount: int):
@@ -30,7 +64,7 @@ def generate_arrays(size: int,
     # Loop over the specified number of arrays to generate
     for i in range(arrays_amount):
         # Generate an array of size 'size' comprising of numbers from 0 to 100
-        array = [random.uniform(0, 100) for _ in range(size)]
+        array = [random.uniform(0, 100) for _ in range(array_size)]
         
         # Add the generated array to the list of arrays
         arrays.append(array)
@@ -59,14 +93,15 @@ def split_data_for_models(training_arrays, PartsNumber: int): #maybe change Part
     return split_data
 
 split_training_arrays = split_data_for_models(generated_arrays, NUMBER_OF_MODELS)
+print(split_training_arrays)
 
 # Function calculating representativeness values for all the objects in a given list
 # and filling a dict of the calculated repr. values for each object
 def repr_calc_in_a_set(objects: list):
     #For each object, calculating distances from all other objects
-    SublistSize = len(objects)
-    ReprDict = []# dictionary of pairs object : representativeness, with the size of the sublist taken by the function
-    for position in range(SublistSize):
+    sublist_size = len(objects)
+    repr_dict = []# dictionary of pairs object : representativeness, with the size of the sublist taken by the function
+    for position in range(sublist_size):
         # calculating the euclidean distance - squared difference of every pair of numbers
         obj = objects[position]
         distances_sum = 0
@@ -86,10 +121,13 @@ def repr_calc_in_a_set(objects: list):
         avg_distance = distances_sum / K_NEAREST_NEIGHBOURS
         representativeness = 1 / (1 + avg_distance)
         # appending the representativeness value to a list of objects mapped to their repr. values
-        ReprDict.append([obj, representativeness]) #appending mutable elements in order to enable feature scaling later
-    print(f"list of representativeness:")
-    print(ReprDict)
-    return(ReprDict)
+        repr_dict.append([obj, representativeness]) #appending mutable elements in order to enable feature scaling later
+    #print(f"list of representativeness:")
+    #print(repr_dict) #just for value checking/program observation
+    return(repr_dict)
+
+class RepresentativenessDictionary:
+    dictionary = split_data_for_models(generate_arrays(INDVARS_ARRAY_SIZE, ARRAYS_AMOUNT), NUMBER_OF_MODELS)
 
 model_number = 0
 
@@ -99,13 +137,13 @@ def split_data(data):
     #the dependent variable is the second
     indvars_list = [pair[0] for pair in data]
     depvars_list = [pair[1] for pair in data]
-    print(f"Independent variables sets: {indvars_list}") #content check
-    print(f"Dependent variables: {depvars_list}") #content check
+    #print(f"Independent variables sets: {indvars_list}") ##content check
+    #print(f"Dependent variables: {depvars_list}") ##content check
     return indvars_list, depvars_list
 
 for training_array in split_training_arrays:
     object_to_representation = repr_calc_in_a_set(training_array)
-    print(f"analyzed object No. {model_number}")
+    #print(f"analyzed object No. {model_number}") ##just for value checking/program observation
     model_number+=1
     #splitting the pair of dependent variables and their arrays of independent variables to supply them to the ML model
     split_data(object_to_representation)
@@ -115,37 +153,112 @@ for training_array in split_training_arrays:
 ### WORKING AS INTENDED - SYNCHRONOUS VERSION (CHANGE TO ASYNC)
 
 
-#Function trains the ML model using Random Forest Regression
+#Function trains the ML model using Random Forest Regression, saves the model as .pkl 
+# and returns a boolean - training success indicator
 def train_model(dataset: MachineLearningData):  #Uses the libraries: numpy, matplotlib, pandas
-   
-    #Importing the dataset
+    
+
+    
+    # Importing the dataset
     # getting the array of all independent variables into the X variable
-    #X = dataset.iloc[:, 0].values ### ! CHECK THIS LINE 
     X = [pair[0] for pair in dataset]
     
     # getting the array of all dependent variables into the y variable
-    #y = dataset.iloc[:, 1].values ### ! CHECK THIS LINE 
     y = [pair[1] for pair in dataset]
 
-    #Splitting the dataset into the Training set and Test set
-    from sklearn.model_selection import train_test_split
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+    training_success = None
 
-    #Training the Random Forest Regression model on the whole dataset
-    from sklearn.ensemble import RandomForestRegressor
+
+
     regressor = RandomForestRegressor(n_estimators = 10, random_state = 0)
-    regressor.fit(X_train, y_train)
+    try:
+        regressor.fit(X, y)
+        training_success = True
+    except:
+        print("model training failed")
+        training_success = False
+       
 
-    #Predicting the Test set results
-    y_pred = regressor.predict(X_test)
-    np.set_printoptions(precision=2)
-    print(np.concatenate((y_pred.reshape(len(y_pred),1), y_test.reshape(len(y_test),1)),1))
+
+def dump_models(trained_model: base.BaseEstimator, end_numerator: int = None):    
+    # getting the timestamp for the current machine learning model, saving it with this timestamp in the name
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+
+
+    # Checking if the /trained_models folder exists, creating a new one if a folder of this name isn't found
+    #models_foldername = 'trained_models'
+    models_folder_path = Path(TRAINED_MODELS_PATH_NAME)
+    try:
+        #if not os.path.exists(models_folder_path):
+        if not models_folder_path.exists():
+            
+            Path.mkdir(models_folder_path)
+            print(f"Creating a folder for the trained models: {models_folder_path}")
+    except:
+        print("A problem occurred when trying to create a new folder ")
+
+    model_path = models_folder_path.joinpath(f"model_{timestamp}_{end_numerator}.pkl")
+    dump(trained_model, model_path) ### EDIT - make this dump models into a /trained_models folder
+
+
+
+    ### This part of code would allow the developers to test the model's accuracy ###
+    # Splitting the dataset into the Training set and Test set
+    #from sklearn.model_selection import train_test_split
+    #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+
+    # Training the Random Forest Regression model on the whole dataset
+    #from sklearn.ensemble import RandomForestRegressor
+    #regressor = RandomForestRegressor(n_estimators = 10, random_state = 0)
+    #regressor.fit(X_train, y_train)
+
+    
+    # Predicting the Test set results
+    #y_pred = regressor.predict(X_test)
+    #np.set_printoptions(precision=2)
+    #print(np.concatenate((y_pred.reshape(len(y_pred),1), y_test.reshape(len(y_test),1)),1))
 
     #Evaluating the Model Performance
-    from sklearn.metrics import r2_score
-    r2_score(y_test, y_pred)
+    #from sklearn.metrics import r2_score
+    #r2_score(y_test, y_pred)
+    
+    ### End of accuracy testing code
+
+# def get_recent_models():
+#     model_files = os.listdir("/trained_models")
+
+#     # Sortowanie plików według czasu modyfikacji
+#     model_files.sort(key=os.path.getmtime, reverse=True)
+
+#     # Loading the recently trained group of models
+#     predicting_models = []
+#     for i in range(NUMBER_OF_MODELS):
+#         model_path = os.path.join("/trained_models", model_files[i])
+#         model = joblib.load(model_path)
+#         predicting_models.append(model)
+#     return predicting_models
+
+
+
+# Function that makes a new prediction from a set of new independent variables
+# def predict_from_models_array(models, new_indvars: list[float]):
+#     new_indvars = [5.3, 34.111, 99.1, 0.9, 10.4] #test input, remove later and only take input from the user
+#     predicted_values_sum = 0
+#     for model in models:
+#         predicted_value: float = model.predict(new_indvars)
+#         predicted_values_sum += predicted_value
+#     average_prediction = predicted_values_sum / len(new_indvars)
+#     print(f"Average prediction: {average_prediction}") # just for checking
+#     return(average_prediction)
     
 
+# predict_from_models_array(get_recent_models())
+
+
+
+for training_array in split_training_arrays:
+    object_to_representation = repr_calc_in_a_set(training_array)
+    dump_models(train_model(object_to_representation))
 
 
 
@@ -181,38 +294,40 @@ def get_training_status():
     "end_time": end_time.isoformat() if end_time else None,
   }
 
-# Zmienne do śledzenia statusu
-_training_failed = False
-_error_message = None
-_start_time = None
-_training_completed = False
-_end_time = None
-
-# Function that initiates the training of the model.
-def start_training():
-  # setting the global variables for status observation
-  global _training_failed, _error_message, _start_time, _training_completed, _end_time
-
+#class status_check:
+  # Zmienne do śledzenia statusu
   _training_failed = False
   _error_message = None
-  _start_time = datetime.now()
+  _start_time = None
   _training_completed = False
   _end_time = None
-# Function to be called when the model trianing ends - it updates the status variables
-def end_training(success=True):
-  """
-  Argumenty:
-    success: True, if the training finished successfully , otherwise False. ### ! prepare the 'success' variable: it should check 
-                                                                            ### if the full set of dependent variables is delivered
-                                                                            ### at the end of the model training.
-  """
 
-  global _training_failed, _error_message, _training_completed, _end_time
+  # Function that initiates the training of the model.
+  def start_training():
+    # setting the global variables for status observation
+    _training_failed, _error_message, _start_time, _training_completed, _end_time
 
-  _training_completed = True 
-  _end_time = datetime.now()
+    _training_failed = False
+    _error_message = None
+    _start_time = datetime.now()
+    _training_completed = False
+    _end_time = None
+  # Function to be called when the model traiing ends - it updates the status variables
+  def end_training(success=True):
+    
+    """
+    Argumenty:
+      success: True, if the training finished successfully , otherwise False. ### ! prepare the 'success' variable: it should check 
+                                                                              ### if the full set of dependent variables is delivered
+                                                                              ### at the end of the model training.
+    """
 
-  if not success:
-    _training_failed = True
-    _error_message = "An error occurred during the model training."
+    _training_failed, _error_message, _training_completed, _end_time
+
+    _training_completed = True 
+    _end_time = datetime.now()
+
+    if not success:
+      _training_failed = True
+      _error_message = "An error occurred during the model training."
 

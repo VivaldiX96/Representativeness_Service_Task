@@ -131,56 +131,51 @@ class RepresentativenessDictionary:
 
 model_number = 0
 
-# Splits the list of pairs in a MyModel object into two arrays.
-def split_data(data):
-    #selecting the data from each pair - the single array of independent variables is the first in each pair,
-    #the dependent variable is the second
-    indvars_list = [pair[0] for pair in data]
-    depvars_list = [pair[1] for pair in data]
-    #print(f"Independent variables sets: {indvars_list}") ##content check
-    #print(f"Dependent variables: {depvars_list}") ##content check
-    return indvars_list, depvars_list
-
-for training_array in split_training_arrays:
-    object_to_representation = repr_calc_in_a_set(training_array)
-    #print(f"analyzed object No. {model_number}") ##just for value checking/program observation
-    model_number+=1
-    #splitting the pair of dependent variables and their arrays of independent variables to supply them to the ML model
-    split_data(object_to_representation)
 
 
 
 ### WORKING AS INTENDED - SYNCHRONOUS VERSION (CHANGE TO ASYNC)
 
 
-#Function trains the ML model using Random Forest Regression, saves the model as .pkl 
+# Function trains a batch of ML regression models 
 # and returns a boolean - training success indicator
-def train_model(dataset: MachineLearningData):  #Uses the libraries: numpy, matplotlib, pandas
+def train_models(datasets_batch: List[MachineLearningData]):  #Uses the libraries: numpy, matplotlib, pandas
     
-
-    
-    # Importing the dataset
-    # getting the array of all independent variables into the X variable
-    X = [pair[0] for pair in dataset]
-    
-    # getting the array of all dependent variables into the y variable
-    y = [pair[1] for pair in dataset]
-
+    trained_models = []
     training_success = None
 
+    for dataset in datasets_batch:
+        
+        # Importing the dataset
+        # getting the array of all independent variables into the X variable
+        X = [pair[0] for pair in dataset]
+        
+        # getting the array of all dependent variables into the y variable
+        y = [pair[1] for pair in dataset]    
 
-
-    regressor = RandomForestRegressor(n_estimators = 10, random_state = 0)
-    try:
-        regressor.fit(X, y)
+        regressor = RandomForestRegressor(n_estimators = 10, random_state = 0)
+        try:
+            regressor.fit(X, y)
+            
+        except:
+            print("model training failed")
+            training_success = False
+        
+        trained_models.append(regressor)
+    
+    if len(trained_models) == NUMBER_OF_MODELS:
         training_success = True
-    except:
-        print("model training failed")
+        print("training successful")
+        return trained_models#, training_success
+    else:
         training_success = False
+        print("training of one or more models failed")
+        return training_success
+        
        
 
-
-def dump_models(trained_model: base.BaseEstimator, end_numerator: int = None):    
+# Function saves the model as .pkl in a special folder (creates the folder if it didn't exist before)
+def dump_models(trained_models: list[base.BaseEstimator]):    ###### WORK ON END NUMERATOR
     # getting the timestamp for the current machine learning model, saving it with this timestamp in the name
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
 
@@ -196,12 +191,16 @@ def dump_models(trained_model: base.BaseEstimator, end_numerator: int = None):
             print(f"Creating a folder for the trained models: {models_folder_path}")
     except:
         print("A problem occurred when trying to create a new folder ")
+    print(f"trained_models: {trained_models}")
+    for end_numerator in range(len(trained_models)):
+        trained_model_path = models_folder_path.joinpath(f"model_{timestamp}_{end_numerator}.pkl")
+        trained_model = trained_models[end_numerator]
+        dump(trained_model, trained_model_path)
+    
 
-    model_path = models_folder_path.joinpath(f"model_{timestamp}_{end_numerator}.pkl")
-    dump(trained_model, model_path) ### EDIT - make this dump models into a /trained_models folder
 
 
-
+    #################################################################################
     ### This part of code would allow the developers to test the model's accuracy ###
     # Splitting the dataset into the Training set and Test set
     #from sklearn.model_selection import train_test_split
@@ -222,45 +221,56 @@ def dump_models(trained_model: base.BaseEstimator, end_numerator: int = None):
     #from sklearn.metrics import r2_score
     #r2_score(y_test, y_pred)
     
-    ### End of accuracy testing code
+    ### End of accuracy testing code ###
+    ####################################
 
-# def get_recent_models():
-#     model_files = os.listdir("/trained_models")
+# Function that gets the recent batch of trained models. The number of the models in one batch is defined globally - not editable by the User
+def get_recent_models():
+    
+    models_filenames = os.listdir("trained_models")
+    print(models_filenames) #OK, works
+    models_filepaths: Path = []
+    for model_filename in models_filenames:
+        model_path = os.path.join("trained_models", model_filename)
+        models_filepaths.append(model_path)
+        #models_filepaths.append(model_filename)
+    # Sortowanie plików według czasu modyfikacji
+    print(f"models filepaths: {models_filepaths}")
+    models_filepaths.sort(key=os.path.getmtime, reverse=True)
+    print(f"SORTED models filepaths: {models_filepaths}")
 
-#     # Sortowanie plików według czasu modyfikacji
-#     model_files.sort(key=os.path.getmtime, reverse=True)
-
-#     # Loading the recently trained group of models
-#     predicting_models = []
-#     for i in range(NUMBER_OF_MODELS):
-#         model_path = os.path.join("/trained_models", model_files[i])
-#         model = joblib.load(model_path)
-#         predicting_models.append(model)
-#     return predicting_models
+    # Loading the recently trained group of models
+    predicting_models = []
+    for i in range(NUMBER_OF_MODELS):
+        print(f"model filepath to grab number {i}: {models_filepaths[i]}")
+        model_to_grab = joblib.load(models_filepaths[i])
+        predicting_models.append(model_to_grab)
+    print(f"predicting_models: {predicting_models}")
+    return predicting_models
 
 
 
 # Function that makes a new prediction from a set of new independent variables
-# def predict_from_models_array(models, new_indvars: list[float]):
-#     new_indvars = [5.3, 34.111, 99.1, 0.9, 10.4] #test input, remove later and only take input from the user
-#     predicted_values_sum = 0
-#     for model in models:
-#         predicted_value: float = model.predict(new_indvars)
-#         predicted_values_sum += predicted_value
-#     average_prediction = predicted_values_sum / len(new_indvars)
-#     print(f"Average prediction: {average_prediction}") # just for checking
-#     return(average_prediction)
+def predict_from_models_array(models: list[RandomForestRegressor]): ###, new_indvars: list[[float]] | None = None
+    new_indvars = [[5.3], [34.111], [99.1], [0.9], [10.4]] #test input, remove later and only take input from the user
+    predicted_values_sum = 0
+    for model in models:
+        predicted_value: float = model.predict(np.array(new_indvars).reshape(1, -1))
+        predicted_values_sum += predicted_value
+    average_prediction = predicted_values_sum / len(new_indvars)
+    print(f"Average prediction: {average_prediction}") # just for checking
+    return(average_prediction)
     
-
-# predict_from_models_array(get_recent_models())
-
-
+objects_to_representations_batch = []
 
 for training_array in split_training_arrays:
     object_to_representation = repr_calc_in_a_set(training_array)
-    dump_models(train_model(object_to_representation))
+    objects_to_representations_batch.append(object_to_representation)
+    #################
 
+dump_models(train_models(objects_to_representations_batch))
 
+predict_from_models_array(get_recent_models())
 
 
 

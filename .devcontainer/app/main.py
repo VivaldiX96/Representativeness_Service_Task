@@ -1,7 +1,7 @@
 import asyncio
 from flask import Flask, jsonify
 from fastapi import FastAPI
-from services import train_model
+from services import train_models
 from schemas import NumbersInput
 
 from time import sleep   ### for testing on dummy tasks

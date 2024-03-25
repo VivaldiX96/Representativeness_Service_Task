@@ -153,7 +153,7 @@ def train_models(datasets_batch: List[MachineLearningData]):  #Uses the librarie
         # getting the array of all dependent variables into the y variable
         y = [pair[1] for pair in dataset]    
 
-        regressor = RandomForestRegressor(n_estimators = 10, random_state = 0)
+        regressor = RandomForestRegressor(n_estimators = 10, random_state = random.randint(0, 42))
         try:
             regressor.fit(X, y)
             

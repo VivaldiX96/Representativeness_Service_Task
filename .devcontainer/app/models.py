@@ -18,4 +18,5 @@ class VariablesRow(BaseModel):
 class MachineLearningData(BaseModel):
     mldata: List[VariablesRow]
 
+#class 
 

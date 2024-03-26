@@ -17,7 +17,7 @@ class NumberInput(BaseModel):
         return v
 
 class NumbersInput(BaseModel):
-    numbers: List[NumberInput]
+    numbers: list[NumberInput]
 
     @validator('numbers')
     def validate_numbers_length(cls, v):

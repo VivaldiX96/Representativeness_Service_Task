@@ -22,3 +22,5 @@ _Optional - Instruction on how to run the devcontainer in VSCode:_
     - Press Ctrl + Shift + P to show and run commands in the search field on top of the VSCode window
     - Choose the option "Dev Containers: Reopen in Container". You can find it if you start typing ">reopen..." in the search field. Make sure that Docker is running by the time you choose this option.
     - To run the server, first cd to ./devcontainer/app - then type "uvicorn main:app --host 0.0.0.0 --port 80 --reload" in the command line in the IDE when you are in the working directory in the program's container - the uvicorn service will not be launched automatically if you open the devcontainer, the command line has to be handled by the user
+
+On the first run of the program, please generate a batch of training data for the ML models executing the function in GET /training \_data endpoint and supply that data to the train_models endpoint in order to train the first batch of models and be able to grab them to predict results for new independent variables

@@ -24,7 +24,7 @@ class IndVariableInput(BaseModel):
 class IndVariablesInput(BaseModel):
     ind_vars: list[float]
 
-    @validator('variables', check_fields=False)
+    @validator('ind_vars', check_fields=False)
     def validate_variables_length(cls, v):
         if len(v) != IND_VARS_ARRAY_SIZE:
             raise ValueError(f'You should provide exactly {IND_VARS_ARRAY_SIZE} variables')
@@ -44,5 +44,6 @@ class VariablesRow(BaseModel):
 class MachineLearningData(BaseModel):
     ml_data: List[VariablesRow]
 
-
+class DepVariable(BaseModel):
+    dep_var: float
 

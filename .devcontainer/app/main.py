@@ -1,7 +1,6 @@
 import asyncio
 from fastapi import FastAPI
 from services import train_models, generate_data, dump_models, predict_from_models_array, check_training_status
-from schemas import NumbersInput
 from models import MachineLearningData, IndVariablesInput
 from typing import List
 from parameters import NUMBER_OF_MODELS

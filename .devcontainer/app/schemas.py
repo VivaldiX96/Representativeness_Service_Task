@@ -1,5 +1,4 @@
-from fastapi import FastAPI
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, validator
 
 from parameters import NUMBER_OF_MODELS, IND_VARS_ARRAY_SIZE, ARRAYS_AMOUNT, K_NEAREST_NEIGHBOURS 
 

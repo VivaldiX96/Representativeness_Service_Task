@@ -1,14 +1,13 @@
 
-from sklearn.ensemble import RandomForestRegressor
-
+# The values below are not editable by the app user
 
 NUMBER_OF_MODELS: int = 4    # "L" from task description - Default number of parts into which we split 
                              # the whole group of training arrays; also the number of models
                              # from which the averaged prediction will be obtained.
-                             # It is _not_ directly editable by the User
+                            
 
 IND_VARS_ARRAY_SIZE: int = 5  # Default size of one array of numbers that will become a single row 
-                             # of independent variables in the training data; not editable by the User
+                             # of independent variables in the training data
 
 
 K_NEAREST_NEIGHBOURS: int = 3 # the number of the nearest neighbours of each analyzed object - 

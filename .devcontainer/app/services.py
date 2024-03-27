@@ -7,9 +7,9 @@ from time import sleep, strftime
 from typing import List
 import joblib
 import numpy as np
+from multiprocessing import Process ### for train_models
 
-from pydantic import BaseModel, parse_obj_as
-from typing import Optional
+
 
 from joblib import dump
 from models import VariablesRow, MachineLearningData, IndVariablesInput, DepVariable
@@ -42,17 +42,14 @@ async def train_models(datasets_batch: List[MachineLearningData]):
         # Getting machine learning data from each ml_data field in JSON input
         dataset = dataset.ml_data
         
-        # getting the array of all independent variables into the X variable
-        X = [pair.ind_vars for pair in dataset]
-        #print(f"data from ml_data object: {dataset.ml_data}")
-        # getting the array of all dependent variables into the y variable
-        y = [pair.dep_var for pair in dataset]    
+        X = [data_pair.ind_vars for data_pair in dataset] #list of lists of independent variables
+        y = [data_pair.dep_var for data_pair in dataset] #list of dependent variables
          
 
         #print(f"X set: {X}\n")
         #print(f"y set: {y}\n")
         await asyncio.sleep(5)
-        regressor = RandomForestRegressor(n_estimators = N_ESTIMATORS, random_state = random.randint(0, 42))
+        regressor = RandomForestRegressor(n_estimators = N_ESTIMATORS, random_state = random.randint(0, 42)) # according to the knowledge I got in a course on machine learning, 42 is a lucky number in ML
         try:
             regressor.fit(X, y) # training a model
             
@@ -60,7 +57,7 @@ async def train_models(datasets_batch: List[MachineLearningData]):
             print(f"model training failed - exception occurred: {e}")
             training_success = False
         
-        trained_models.append(regressor)
+        trained_models.append(regressor) #adding a freshly trained model to the batch of models to be saved in the trained_models folder
     
     training_end_time = datetime.now().strftime("%Y%m%d-%H:%M:%S")
 
@@ -71,8 +68,7 @@ async def train_models(datasets_batch: List[MachineLearningData]):
         print("Training successful")
         return trained_models
     else:
-        print(f"Training of one or more models failed. Training started at {training_start_time},\nended at {training_end_time}.")
-        status_message = f"Training of one or more models failed. Training started at {training_start_time},\nended at {training_end_time}."
+        status_message = f"Training of one or more models failedwith the exception {e}. Training started at {training_start_time},\nended at {training_end_time}."
         with open(status_file_path, 'w') as status_file:
             status_file.write(status_message)
         

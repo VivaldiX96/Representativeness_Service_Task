@@ -10,8 +10,6 @@ COPY ./requirements.txt /code/requirements.txt
 # Installing the required libraries
 RUN pip install --no-cache-dir -r /code/requirements.txt
 
-#RUN MKDIR /code/app
-
 # Adding the application files to the image
 COPY ./app /code/app
 

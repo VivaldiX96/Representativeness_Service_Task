@@ -19,3 +19,6 @@ N_ESTIMATORS: int = 10 #number of estimators that is set for each regression mod
 ARRAYS_AMOUNT: int = 40  # Total number of arrays of numbers (each of the size = SIZE) 
                          # on which the model will be initially trained
 
+MIN_INDEPENDENT_VARIABLE: float = 0   # the influence of the max range of indpendent variables onthe model's ability to correctly predict the dependent variable
+MAX_INDEPENDENT_VARIABLE: float = 100 # requires further research nad testing; my preliminary theory is that with wider range of independent variables, the model becomes less accurate,
+                                      # but it would requires more time spent testing to verify this.

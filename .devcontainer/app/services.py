@@ -17,7 +17,7 @@ from models import VariablesRow, MachineLearningData, IndVariablesInput, DepVari
 from multiprocessing import Pool
 from sklearn import base
 from sklearn.ensemble import RandomForestRegressor
-from parameters import NUMBER_OF_MODELS, IND_VARS_ARRAY_SIZE, ARRAYS_AMOUNT, K_NEAREST_NEIGHBOURS, N_ESTIMATORS
+from parameters import NUMBER_OF_MODELS, IND_VARS_ARRAY_SIZE, ARRAYS_AMOUNT, K_NEAREST_NEIGHBOURS, N_ESTIMATORS, MIN_INDEPENDENT_VARIABLE, MAX_INDEPENDENT_VARIABLE
 import math
 
 TRAINED_MODELS_PATH_NAME = 'trained_models' # name of a folder created (once) for all the trained models
@@ -103,7 +103,7 @@ def generate_arrays(array_size: int,
     # Loop over the specified number of arrays to generate
     for i in range(arrays_amount):
         # Generate an array of size 'size' comprising of numbers from 0 to 100
-        array = [random.uniform(0, 100) for _ in range(array_size)]
+        array = [random.uniform(MIN_INDEPENDENT_VARIABLE, MAX_INDEPENDENT_VARIABLE) for _ in range(array_size)]
         
         # Add the generated array to the list of arrays
         arrays.append(array)

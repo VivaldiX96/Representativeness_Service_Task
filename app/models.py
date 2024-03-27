@@ -2,7 +2,7 @@
 from typing import List
 from pydantic import BaseModel, validator
 
-from parameters import NUMBER_OF_MODELS, IND_VARS_ARRAY_SIZE, ARRAYS_AMOUNT, K_NEAREST_NEIGHBOURS 
+from parameters import IND_VARS_ARRAY_SIZE, MIN_INDEPENDENT_VARIABLE, MAX_INDEPENDENT_VARIABLE
 
 # the integer parameters that will influence the scale of the model training task
 # class TrainingParameters(BaseModel):
@@ -17,8 +17,8 @@ class IndVariableInput(BaseModel):
 
     @validator('ind_var')
     def ind_var_must_be_in_range(cls, v):
-        if v < 0 or v > 100:
-            raise ValueError(f'The independent variable must be in range from 0 to 100')
+        if v < MIN_INDEPENDENT_VARIABLE or v > MAX_INDEPENDENT_VARIABLE:
+            raise ValueError(f'The independent variable must be in range from {MIN_INDEPENDENT_VARIABLE} to {MAX_INDEPENDENT_VARIABLE}')
         return v
 
 class IndVariablesInput(BaseModel):
@@ -37,7 +37,7 @@ class VariablesRow(BaseModel):
     @validator("dep_var")
     def validate_dep_var(cls, v: float) -> float:
         if v < 0 or v > 1:
-            raise ValueError(f"Dependent variable must be in range (0, 1). Value: {v}")
+            raise ValueError(f"Dependent variable must be in range (0, 1). Value: {v}") #represetativeness can be only in range (0, 1)
         return v
 
 

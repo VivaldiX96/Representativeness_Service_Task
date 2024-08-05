@@ -5,7 +5,6 @@ import random
 from fastapi import FastAPI
 from sklearn import base
 from services import generate_data, dump_models, predict_from_models_array, check_training_status
-#from services import train_models
 from models import MachineLearningData, IndVariablesInput
 from typing import List
 from parameters import NUMBER_OF_MODELS, N_ESTIMATORS
@@ -13,12 +12,10 @@ from multiprocessing import Pool
 from datetime import datetime
 
 from sklearn.ensemble import RandomForestRegressor
-import multiprocessing
 
-from multiprocessing import Process, Pool, Manager ### for train_models
-from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import Pool
 
-from time import sleep, perf_counter   ### for testing on dummy tasks
+from time import sleep
 
 app = FastAPI()
 

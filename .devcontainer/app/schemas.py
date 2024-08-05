@@ -1,7 +1,6 @@
-from fastapi import FastAPI
-from pydantic import BaseModel, Field, validator
-from typing import List
-from parameters import NUMBER_OF_MODELS, INDVARS_ARRAY_SIZE, ARRAYS_AMOUNT, K_NEAREST_NEIGHBOURS 
+from pydantic import BaseModel, validator
+
+from parameters import NUMBER_OF_MODELS, IND_VARS_ARRAY_SIZE, ARRAYS_AMOUNT, K_NEAREST_NEIGHBOURS 
 
 
 
@@ -17,10 +16,10 @@ class NumberInput(BaseModel):
         return v
 
 class NumbersInput(BaseModel):
-    numbers: List[NumberInput]
+    numbers: list[NumberInput]
 
     @validator('numbers')
     def validate_numbers_length(cls, v):
-        if len(v) != INDVARS_ARRAY_SIZE:
-            raise ValueError(f'You should provide exactly {INDVARS_ARRAY_SIZE} numbers')
+        if len(v) != IND_VARS_ARRAY_SIZE:
+            raise ValueError(f'You should provide exactly {IND_VARS_ARRAY_SIZE} numbers')
         return v    

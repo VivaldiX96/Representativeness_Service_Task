@@ -38,8 +38,6 @@ def train_one_model(dataset):
     X = [data_pair.ind_vars for data_pair in dataset] #list of lists of independent variables
     y = [data_pair.dep_var for data_pair in dataset] #list of dependent variables
          
-
-
         
     print(f"training a model - started at {datetime.now().strftime("%Y.%m.%d-%H:%M:%S")}...")
     regressor = RandomForestRegressor(n_estimators = N_ESTIMATORS, random_state = random.randint(0, 42)) # 42 is a lucky number in ML
@@ -61,37 +59,22 @@ def train_models(raw_datasets_batch: List[MachineLearningData]):
     training_start_time = datetime.now().strftime("%Y%m%d-%H:%M:%S")
     status_message = f"A new training of {NUMBER_OF_MODELS} models was started at {training_start_time}"
         
-    
-
-
     with open(status_file_path, 'w') as status_file:
         status_file.write(status_message)
 
     trained_models = []
     
-
     datasets = []
 
     pool = Pool(processes=num_cores) # number of processes of machine learning we want to start concurrently - in this case it is the number of models
                                      # the data for models will be split into as many datasets as there are models
-    
-
-    ###############
 
     for raw_dataset in raw_datasets_batch:
         # Getting machine learning data from each ml_data field in JSON input
         dataset = raw_dataset.ml_data
-        datasets.append(dataset)
+        datasets.append(dataset) 
 
-
-        
-        #trained_models.append(regressor) #adding a freshly trained model to the batch of models to be saved in the trained_models folder
-    
-    ###############
-
-    
-
-    trained_models = pool.map(train_one_model, datasets)
+    trained_models = pool.map(train_one_model, datasets) # parallel training of the ML models
     
     pool.close()
     pool.join()
@@ -109,42 +92,16 @@ def train_models(raw_datasets_batch: List[MachineLearningData]):
         return 
 
 
-
-
-
 @app.get("/training_data")
 async def generate_training_data():
     return await generate_data()
 
-### Multiprocess version:
-# endpoint for initiation of the model training on the data delivered 
-# by the User - preferably, copied after generating from the training_data endpoint
+
 @app.post("/train-models")
 async def train_models_on_supplied_data(datasets_batch: list[MachineLearningData]):    
-    #### multiprocessing version >>>
-    #async with ProcessPoolExecutor() as executor:
-    #    trained_models = await executor.map(train_models, datasets_batch)
-    #### <<< multiprocessing version
-    ###
-    ### CHANGED LINE: # trained_models = await train_models(datasets_batch)
     trained_models = train_models(datasets_batch)
-    ###
     dump_models(trained_models)
     return {"message": f"{NUMBER_OF_MODELS} models trained and saved in the /trained_models folder"}
-
-
-
-
-# endpoint for initiation of the model training on the data delivered 
-# by the User - preferably, copied after generating from the training_data endpoint
-# @app.post("/train-models")
-# async def train_models_on_supplied_data(datasets_batch: list[MachineLearningData]):    
-#     trained_models = await train_models(datasets_batch)
-#     dump_models(trained_models)
-#     return {"message": f"{NUMBER_OF_MODELS} models trained and saved in the /trained_models folder"}
-
-### Please generate a batch of training data for the ML models and supply the to the train_models endpoint in order to
-### train the first batch of models and be able to grab them to predict for new independent variables    
 
 
 @app.get("/task_status")
